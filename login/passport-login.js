@@ -208,7 +208,8 @@ passport.use(new LocalStrategy(
 
 function authenticate(username, callback) {
     client.query(
-    'SELECT id_user AS id,name AS username, pass AS password FROM users WHERE name = "' +username+ '" LIMIT 1',
+    'SELECT id_user AS id, name AS username, pass AS password FROM users ' +
+	'WHERE name = "' +username+ '" LIMIT 1',
 	function(error, results) {
 		if(error) {
 			logger.error(error)
