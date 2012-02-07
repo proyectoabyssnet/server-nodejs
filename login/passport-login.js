@@ -3,7 +3,17 @@ var express = require('express')
   , passportTwitter = require('passport')
   , util = require('util')
   , FacebookStrategy = require('passport-facebook').Strategy
-  , TwitterStrategy = require('passport-twitter').Strategy;
+  , TwitterStrategy = require('passport-twitter').Strategy
+  , mysql = require('mysql')
+  , passport = require('passport')
+  , LocalStrategy = require('passport-local').Strategy;
+
+var client = mysql.createClient({
+  user: 'root',
+  password: '',
+  database: 'test',
+  port: 3306,
+});
 
 var FACEBOOK_APP_ID = "178287175611294"
 var FACEBOOK_APP_SECRET = "0cc0aa3b7d9fc74776c8dab9fd7e79d6";
@@ -118,6 +128,73 @@ app.get('/account', ensureAuthenticated, function(req, res){
 app.get('/login', function(req, res){
   res.render('login', { user: req.user });
 });
+
+
+//-------****** PASSPORT-LOCAL ******-------
+
+var users = [
+    { id: 1, username: 'bob', password: 'secret', email: 'bob@example.com' }
+  , { id: 2, username: 'joe', password: 'birthday', email: 'joe@example.com' }
+  , { id: 3, username: 'zerohours', password: '12345', email: 'zerohours@example.com' }
+];
+
+
+// Passport session setup.
+//   To support persistent login sessions, Passport needs to be able to
+//   serialize users into and deserialize users out of the session.  Typically,
+//   this will be as simple as storing the user ID when serializing, and finding
+//   the user by ID when deserializing.
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  findById(id, function (err, user) {
+    done(err, user);
+  });
+});
+
+app.post('/login', 
+  passport.authenticate('local', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+
+// Use the LocalStrategy within Passport.
+//   Strategies in passport require a `verify` function, which accept
+//   credentials (in this case, a username and password), and invoke a callback
+//   with a user object.  In the real world, this would query a database;
+//   however, in this example we are using a baked-in set of users.
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    // asynchronous verification, for effect...
+    process.nextTick(function () {
+      
+      // Find the user by username.  If there is no user with the given
+      // username, or the password is not correct, set the user to `false` to
+      // indicate failure.  Otherwise, return the authenticated `user`.
+      findByUsername(username, function(err, user) {
+        if (err) { return done(err); }
+        if (!user) { return done(null, false); }
+        if (user.password != password) { return done(null, false); }
+        return done(null, user);
+      })
+    });
+  }
+));
+
+function findByUsername(username, fn) {
+  for (var i = 0, len = users.length; i < len; i++) {
+    var user = users[i];
+    if (user.username === username) {
+      return fn(null, user);
+    }
+  }
+  return fn(null, null);
+}
+
+//-------****** PASSPORT-LOCAL ******-------
 
 
 // GET /auth/facebook
