@@ -129,6 +129,38 @@ app.get('/login', function(req, res){
   res.render('login', { user: req.user });
 });
 
+//-------****** REGISTER-USER ******-------
+
+app.get('/singup', function(req, res){
+  res.render('singup', { user: req.user });
+});
+
+app.post('/register', function(req, res){
+   var username = req.body.username
+   var password = req.body.password
+   var e_mail = req.body.email
+    sing_up(username, password, e_mail, function(err, singup) {
+	  res.render('register', { user: req.user });
+    });
+});
+
+function sing_up(username, password, e_mail, call) {
+    client.query(
+    'INSERT INTO users(name, pass, email) VALUES("'+username+'","'+password+'","'+e_mail+'")',	
+	function(error, results) {
+		if(error) {
+			call(null, null);
+			return;
+		} else {
+			var user = true;
+			    call(null, user);
+			    return;
+			}
+		}
+	);
+};
+
+//-------****** REGISTER-USER ******-------
 
 //-------****** PASSPORT-LOCAL ******-------
 
