@@ -132,13 +132,6 @@ app.get('/login', function(req, res){
 
 //-------****** PASSPORT-LOCAL ******-------
 
-var users = [
-    { id: 1, username: 'bob', password: 'secret', email: 'bob@example.com' }
-  , { id: 2, username: 'joe', password: 'birthday', email: 'joe@example.com' }
-  , { id: 3, username: 'zerohours', password: '12345', email: 'zerohours@example.com' }
-];
-
-
 // Passport session setup.
 //   To support persistent login sessions, Passport needs to be able to
 //   serialize users into and deserialize users out of the session.  Typically,
@@ -165,7 +158,7 @@ app.post('/login',
 //   credentials (in this case, a username and password), and invoke a callback
 //   with a user object.  In the real world, this would query a database;
 //   however, in this example we are using a baked-in set of users.
-
+/*
 passport.use(new LocalStrategy(
   function(username, password, done) {
     // asynchronous verification, for effect...
@@ -193,6 +186,44 @@ function findByUsername(username, fn) {
   }
   return fn(null, null);
 }
+*/
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    // asynchronous verification, for effect...
+    process.nextTick(function () {
+      
+      // Find the user by username.  If there is no user with the given
+      // username, or the password is not correct, set the user to `false` to
+      // indicate failure.  Otherwise, return the authenticated `user`.
+      authenticate(username, function(err, user) {
+        if (err) { return done(err); }
+        if (!user) { return done(null, false); }
+        if (user.password != password) { return done(null, false); }
+        return done(null, user);
+      })
+    });
+  }
+));
+
+function authenticate(username, callback) {
+    client.query(
+    'SELECT id_user AS id,name AS username, pass AS password FROM users WHERE name = "' +username+ '" LIMIT 1',
+	function(error, results) {
+		if(error) {
+			logger.error(error)
+		} else {
+			var user = results[0];
+			if (!user) {
+				callback(null, null);
+				return;
+			} else {
+			    callback(null, user);
+			    return;
+			}
+		}
+	});
+};
 
 //-------****** PASSPORT-LOCAL ******-------
 
