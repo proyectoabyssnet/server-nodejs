@@ -6,7 +6,8 @@ var express = require('express')
   , TwitterStrategy = require('passport-twitter').Strategy
   , mysql = require('mysql')
   , passport = require('passport')
-  , LocalStrategy = require('passport-local').Strategy;
+  , LocalStrategy = require('passport-local').Strategy
+  , crypto = require('crypto');
 
 var client = mysql.createClient({
   user: 'root',
@@ -139,22 +140,35 @@ app.post('/register', function(req, res){
    var username = req.body.username
    var password = req.body.password
    var e_mail = req.body.email
-    sing_up(username, password, e_mail, function(err, singup) {
-	  res.render('register', { user: req.user });
+    sing_up(username, password, e_mail, function(err, user) {
+
+        if (user) {
+            console.log("OK. \n");
+            res.render('register', { user: req.user });
+        }
+        else {
+            console.log("Error. \n");
+            res.render('error', { user: null });
+        }	
+
     });
 });
 
 function sing_up(username, password, e_mail, call) {
+    hash = crypto.createHmac('sha1', 'Asdf123@').update(password).digest('hex');
     client.query(
-    'INSERT INTO users(name, pass, email) VALUES("'+username+'","'+password+'","'+e_mail+'")',	
+    'INSERT INTO users(name, pass, email) VALUES("'+username+'","'+hash+'","'+e_mail+'")',	
 	function(error, results) {
 		if(error) {
+            console.log("Error al ingresar los datos. \n");
+			console.log("\nError: " + error);
 			call(null, null);
 			return;
 		} else {
 			var user = true;
-			    call(null, user);
-			    return;
+            console.log("Ok, los datos han sido ingresados. \n");
+            call(null, user);
+            return;
 			}
 		}
 	);
@@ -229,9 +243,10 @@ passport.use(new LocalStrategy(
       // username, or the password is not correct, set the user to `false` to
       // indicate failure.  Otherwise, return the authenticated `user`.
       authenticate(username, function(err, user) {
+	    hash = crypto.createHmac('sha1', 'Asdf123@').update(password).digest('hex');
         if (err) { return done(err); }
         if (!user) { return done(null, false); }
-        if (user.password != password) { return done(null, false); }
+        if (user.password != hash) { return done(null, false); }
         return done(null, user);
       })
     });
@@ -244,7 +259,8 @@ function authenticate(username, callback) {
 	'WHERE name = "' +username+ '" LIMIT 1',
 	function(error, results) {
 		if(error) {
-			logger.error(error)
+			logger.error(error);
+			console.log("\nError: " + error);
 		} else {
 			var user = results[0];
 			if (!user) {
