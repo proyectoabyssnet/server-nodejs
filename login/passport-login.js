@@ -7,11 +7,13 @@ var express = require('express')
   , mysql = require('mysql')
   , passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy
-  , crypto = require('crypto');
+  , crypto = require('crypto')
+  , server = 'http://localhost'
+  , path = '/html5/games/client/';
 
 var client = mysql.createClient({
-  user: 'root',
-  password: '',
+  user: 'tor',
+  password: 'tor',
   database: 'test',
   port: 3306,
 });
@@ -43,7 +45,7 @@ passportFacebook.deserializeUser(function(obj, done) {
 passportFacebook.use(new FacebookStrategy({
     clientID: FACEBOOK_APP_ID,
     clientSecret: FACEBOOK_APP_SECRET,
-    callbackURL: "http://www.deviper.com:3000/auth/facebook/callback"
+    callbackURL: server+":3000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...
@@ -80,7 +82,7 @@ passportTwitter.deserializeUser(function(obj, done) {
 passportTwitter.use(new TwitterStrategy({
     consumerKey: TWITTER_CONSUMER_KEY,
     consumerSecret: TWITTER_CONSUMER_SECRET,
-    callbackURL: "http://www.deviper.com:3000/auth/twitter/callback"
+    callbackURL: server+":3000/auth/twitter/callback"
   },
   function(token, tokenSecret, profile, done) {
     // asynchronous verification, for effect...
@@ -196,7 +198,7 @@ passport.deserializeUser(function(id, done) {
 app.post('/login', 
   passport.authenticate('local', { failureRedirect: '/login' }),
   function(req, res) {
-    res.redirect('/');
+    res.redirect(server+path+'estacion.html');
   });
 
 // Use the LocalStrategy within Passport.
