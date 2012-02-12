@@ -146,7 +146,8 @@ app.post('/register', function(req, res){
 
         if (user) {
             console.log("OK. \n");
-            res.render('register', { user: req.user });
+            //res.render('register', { user: req.user });
+	      res.redirect(server+path+'index.html');	
         }
         else {
             console.log("Error. \n");
